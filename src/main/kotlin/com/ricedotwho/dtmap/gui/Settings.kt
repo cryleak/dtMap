@@ -56,11 +56,13 @@ object Settings : ImGuiHandler.RenderInterface("DtMapSettings") {
         fun update() =
             if (type == Type.TText) additional =  ImString(get<String>()) else { }
 
+        @Suppress("UNCHECKED_CAST")
         fun <T> get(): T {
             val casted = prop as KProperty<T>
             return casted.getter.call(owner)
         }
 
+        @Suppress("UNCHECKED_CAST")
         fun set(b: Any) {
             val casted = prop as KMutableProperty<Any>
             casted.setter.call(owner, b)
@@ -73,7 +75,7 @@ object Settings : ImGuiHandler.RenderInterface("DtMapSettings") {
     init {
         val reflections = Reflections("com.ricedotwho.dtmap.config")
 
-        tabs = reflections[Scanners.TypesAnnotated.with(Tab::class.java).asClass<Any>()].mapNotNull { tab ->
+        tabs = reflections[Scanners.TypesAnnotated.with(Tab::class.java).asClass<Any>()].sortedBy { it.simpleName }.mapNotNull { tab ->
             val instance = tab.kotlin.objectInstance ?: throw IllegalArgumentException("You can't have tabs that are not objects: ${tab.name}")
 
             TabImpl(

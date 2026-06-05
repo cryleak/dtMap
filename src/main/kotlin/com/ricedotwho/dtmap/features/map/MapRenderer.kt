@@ -95,12 +95,12 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
 
                 val self = player.entity == mc.player
                 val backgroundColor = if (self) C1Map.playerHeadOwnBackground else C1Map.playerHeadBackground
-                if (C1Map.playerHeadBackgroundSize != 0 && backgroundColor.alpha != 0 && !(self && C1Map.playerUglyPointer)) {
+                if (C1Map.playerHeadBackgroundSize != 0 && backgroundColor.alpha != 0 && !(self && C1Map.playerMCMapPointer)) {
                     val size = 5 + C1Map.playerHeadBackgroundSize
                     context.fill(-size, -size, size, size, backgroundColor.rgb)
                 }
 
-                if (self && C1Map.playerUglyPointer) context.blit(RenderPipelines.GUI_TEXTURED, selfMarker, 5, 5, 10f, 10f, -10, -10, 10, 10)
+                if (self && C1Map.playerMCMapPointer) context.blit(RenderPipelines.GUI_TEXTURED, selfMarker, 5, 5, 10f, 10f, -10, -10, 10, 10)
                 else if (player.skin != null) PlayerFaceRenderer.draw(context, player.skin!!, -5, -5, 10)
                 matrices.popMatrix()
             }

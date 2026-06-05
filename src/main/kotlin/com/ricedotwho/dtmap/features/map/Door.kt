@@ -71,7 +71,7 @@ class Door private constructor(val pos: Vec2i, var type: Type, val rooms: Mutabl
                         }
                     }
                 }
-                Type.NORMAL -> if (C1Map.doorGay) C1Map.normalDoorColor else
+                Type.NORMAL ->
                     when (rooms.firstOrNull { it.owner!!.type != Room.Type.NORMAL && it.owner.type != Room.Type.FAIRY }?.owner?.type) {
                         Room.Type.ENTRANCE -> C1Map.entranceDoorColor
                         Room.Type.BLOOD -> C1Map.bloodDoorColor

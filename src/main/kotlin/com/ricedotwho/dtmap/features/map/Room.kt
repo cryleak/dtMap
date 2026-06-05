@@ -22,6 +22,8 @@ class Room(var type: Type, var shape: Shape, var data: RoomData? = null, var hei
     var rotation: Rotation = Rotation.NONE
     val doors = mutableSetOf<Door>()
 
+    // TODO: this doesn't allow for a room to have more than 1 entry tile, which will happen when 2 rooms lead to the same room at different places
+
     // legit property - entryTile is kept so that we know which tile to display when the legit mode is on.
     var entryTile: Vec2i? = null
 
@@ -83,6 +85,7 @@ class Room(var type: Type, var shape: Shape, var data: RoomData? = null, var hei
     data class StateUpdated(val room: Room, val old: State, val new: State)
 
     fun updateState(placement: Vec2i, color: Int): StateUpdated? {
+        // TODO: this won't work if golden oasis is secreted before its cleared, potentially the secret tracker thing can do 3/1 -> golden oasis and marks it green
         // Golden Oasis has 2 extra secrets and is marked green on 1/1 but turns
         // back to white once you get 2/1 and 3/1.
         if (state == State.GREEN && data?.name == "Golden Oasis") return null
@@ -278,7 +281,7 @@ class Room(var type: Type, var shape: Shape, var data: RoomData? = null, var hei
             State.CLEARED -> MapRenderer.whiteCheck
             State.FAILED -> MapRenderer.cross
             State.UNOPENED -> {
-                if (!C1Map.uglyQuestionMarks || (isKnown1x1 && doors.size == 1) || type == Type.BLOOD) {
+                if (!C1Map.undiscoveredQuestionMarks || (isKnown1x1 && doors.size == 1) || type == Type.BLOOD) {
                     return
                 }
                 MapRenderer.questionMark

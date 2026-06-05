@@ -65,8 +65,8 @@ object C1Map {
     @Setting("Center Text")
     var textCenter = true
 
-    @Setting("Ugly question marks")
-    var uglyQuestionMarks = false
+    @Setting("Undiscovered Question marks")
+    var undiscoveredQuestionMarks = false
 
     @Setting("Player Head", lineBefore = true)
     val playerHead = "Player Head"
@@ -83,8 +83,8 @@ object C1Map {
     @Setting("Draw Own Last")
     var playerHeadDrawOwnLast = false
 
-    @Setting("Ugly Player Pointer")
-    var playerUglyPointer = false
+    @Setting("MC Map Player Pointer")
+    var playerMCMapPointer = false
 
     @Setting("Player Name Scaling", min = 0.0, max = 1.5)
     var playerNamesScaling = 0.75f
@@ -93,16 +93,13 @@ object C1Map {
     var playerNameColor = Color(70, 70, 70)
 
     @Setting("Room additions", lineBefore = true)
-    val roomAdditions = "Additional render to rooms for cripples that don't remember shit."
+    val roomAdditions = "Additional render to rooms."
 
     @Setting("Render Prince")
     var roomAdditionsPrince = false
 
     @Setting("Door Thickness", lineBefore = true, min = 0.0, max = 10.0)
     var doorThicknessF = 9f
-
-    @Setting("Gay door")
-    var doorGay = false
 
     @Setting("Unopened Door")
     var unopenedDoorColor = Color(30, 30, 30)
