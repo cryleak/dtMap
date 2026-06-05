@@ -4,9 +4,13 @@
   "version": "${version}",
   "name": "dtmap",
   "description": "",
-  "authors": [],
-  "contact": {},
-  "license": "All-Rights-Reserved",
+  "authors": [
+    "ricedotwho"
+  ],
+  "contact": {
+    "sources": "https://github.com/ricedotwho/dtMap"
+  },
+  "license": "BSD 3-Clause",
   "environment": "client",
   "entrypoints": {
     "client": [
