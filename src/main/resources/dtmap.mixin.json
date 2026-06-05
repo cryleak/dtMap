@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ricedotwho.dtmap.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ConnectionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "client": [
+    "ClientPacketListenerPriorityMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "GameRendererMixin",
+    "MinecraftMixin"
+  ]
+}

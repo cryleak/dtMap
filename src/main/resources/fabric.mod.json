@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "dtmap",
+  "version": "${version}",
+  "name": "dtmap",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "com.ricedotwho.dtmap.DtMap"
+      }
+    ]
+  },
+  "mixins": [
+    {
+      "config": "dtmap.mixin.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-language-kotlin": ">=${kotlin_loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}",
+    "hypixel-mod-api": "*"
+  },
+  "accessWidener": "dtmap.accesswidener"
+}

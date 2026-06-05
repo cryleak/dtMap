@@ -1,0 +1,12 @@
+{
+  "key": {
+    "sounds": [
+      "dtmap:key"
+    ]
+  },
+  "siren": {
+    "sounds": [
+      "dtmap:siren"
+    ]
+  }
+}
