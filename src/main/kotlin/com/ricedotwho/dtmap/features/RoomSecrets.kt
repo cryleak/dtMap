@@ -1,6 +1,7 @@
 package com.ricedotwho.dtmap.features
 
 import com.ricedotwho.dtmap.DtMap.mc
+import com.ricedotwho.dtmap.config.C3Other
 import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.features.map.DungeonMap
 import com.ricedotwho.dtmap.gui.Hud
@@ -34,16 +35,19 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
     fun onOverlay(packet: ClientboundSystemChatPacket, ci: CallbackInfo) {
         secretsRegex.find(packet.content.string)?.let { found ->
             currentRoomSecrets = found.groups[1]?.value?.toIntOrNull()
-            currentRoomSecrets?.let {
-                val first = found.groups[1]!!.range.first
-                ci.cancel()
-                val content = packet.content.string.substring(0 until first - 2).trimEnd()
-                mc.connection!!.handleSystemChat(ClientboundSystemChatPacket(Component.literal(content), true))
+            if (C3Other.secretHudHide) {
+                currentRoomSecrets?.let {
+                    val first = found.groups[1]!!.range.first
+                    ci.cancel()
+                    val content = packet.content.string.substring(0 until first - 2).trimEnd()
+                    mc.connection!!.handleSystemChat(ClientboundSystemChatPacket(Component.literal(content), true))
+                }
             }
         }
     }
 
     override fun render(context: GuiGraphics) {
+        if (!C3Other.secretHud) return
         val currentRoomSecrets = currentRoomSecrets ?: return
         val currentRoom = DungeonMap.roomPlayerIn() ?: return
 

@@ -32,4 +32,13 @@ object C3Other {
 
     @Setting("Door Esp")
     var soloClearingDoorEsp = false
+
+    @Setting("Secret Hud")
+    var secretHud = false
+
+    @Setting("Hide secrets from actionbar")
+    var secretHudHide = false
+
+    @Setting("Puzzle Hud")
+    var puzzleHud = false
 }

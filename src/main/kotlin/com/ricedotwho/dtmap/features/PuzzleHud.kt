@@ -2,6 +2,7 @@ package com.ricedotwho.dtmap.features
 
 import com.ricedotwho.dtmap.DtMap.mc
 import com.ricedotwho.dtmap.config.C1Map
+import com.ricedotwho.dtmap.config.C3Other
 import com.ricedotwho.dtmap.features.map.Room
 import com.ricedotwho.dtmap.features.map.Scan
 import com.ricedotwho.dtmap.features.map.Scoreboard
@@ -12,7 +13,7 @@ import java.awt.Color
 
 object PuzzleHud : Hud.Component("PuzzleHud", 0.4, 0.4, Hud.Type.Dungeon, staticRenderConditions = mutableListOf(Hud.Condition.BeforeMort, Hud.Condition.Alt)) {
     override fun render(context: GuiGraphics) {
-        if (Location.island != Location.Island.Dungeon) return
+        if (!C3Other.puzzleHud || Location.island != Location.Island.Dungeon) return
 
         context.drawString(mc.font, "Puzzles(${Scoreboard.stats.puzzleCount}):", 0, 0, Color.WHITE.rgb)
 
