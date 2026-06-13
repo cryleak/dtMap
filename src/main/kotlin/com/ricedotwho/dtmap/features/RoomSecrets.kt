@@ -5,6 +5,7 @@ import com.ricedotwho.dtmap.config.C3Other
 import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.features.map.DungeonMap
 import com.ricedotwho.dtmap.gui.Hud
+import com.ricedotwho.dtmap.gui.Hud.Condition
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.network.chat.Component
@@ -12,7 +13,9 @@ import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 import java.awt.Color
 
-object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1.5f) {
+object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1.5f,
+    staticRenderConditions = mutableListOf(Condition.Boss, Condition.Clear, Condition.Alt, Condition.HideOverlaySecrets),
+    allowedStaticRenderConditions = mutableListOf(Condition.Boss, Condition.F7Boss, Condition.Clear, Condition.BeforeMort, Condition.Alt, Condition.HideOverlaySecrets)) {
     val secretsRegex = Regex(".+§7(\\d+)/\\d+ Secrets")
     var currentRoomSecrets: Int? = null
 
@@ -35,7 +38,7 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
     fun onOverlay(packet: ClientboundSystemChatPacket, ci: CallbackInfo) {
         secretsRegex.find(packet.content.string)?.let { found ->
             currentRoomSecrets = found.groups[1]?.value?.toIntOrNull()
-            if (C3Other.secretHudHide) {
+            if (staticRenderConditions.contains(Condition.HideOverlaySecrets)) {
                 currentRoomSecrets?.let {
                     val first = found.groups[1]!!.range.first
                     ci.cancel()
@@ -47,7 +50,6 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
     }
 
     override fun render(context: GuiGraphics) {
-        if (!C3Other.secretHud) return
         val currentRoomSecrets = currentRoomSecrets ?: return
         val currentRoom = DungeonMap.roomPlayerIn() ?: return
 

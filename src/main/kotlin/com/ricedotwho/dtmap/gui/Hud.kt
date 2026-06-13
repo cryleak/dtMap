@@ -34,6 +34,7 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
         Clear("In Clear", { Location.island == Location.Island.Dungeon && (DungeonMessages.seenDungeonStart || Scoreboard.stats.elapsedTime != "0s") && !DungeonMessages.inBoss }),
         BeforeMort("Before Dungeon Start", { Location.island == Location.Island.Dungeon && !DungeonMessages.seenDungeonStart }),
         Alt("Hud Insight", { DtMap.keybindShowHud.isDown }),
+        HideOverlaySecrets("Hide Action Bar Secrets", { false })
     }
 
     enum class Type {

@@ -13,7 +13,7 @@ import java.awt.Color
 
 object PuzzleHud : Hud.Component("PuzzleHud", 0.4, 0.4, Hud.Type.Dungeon, staticRenderConditions = mutableListOf(Hud.Condition.BeforeMort, Hud.Condition.Alt)) {
     override fun render(context: GuiGraphics) {
-        if (!C3Other.puzzleHud || Location.island != Location.Island.Dungeon) return
+        if (Location.island != Location.Island.Dungeon) return
 
         context.drawString(mc.font, "Puzzles(${Scoreboard.stats.puzzleCount}):", 0, 0, Color.WHITE.rgb)
 

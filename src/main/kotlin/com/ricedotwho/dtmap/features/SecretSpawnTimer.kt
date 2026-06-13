@@ -6,6 +6,7 @@ import com.ricedotwho.dtmap.gui.Hud
 import com.ricedotwho.dtmap.utils.DungeonMessages
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import java.awt.Color
 
 object SecretSpawnTimer : Hud.Component("ItemPickup", 0.5, 0.6, Hud.Type.Dungeon, staticRenderConditions = mutableListOf(Hud.Condition.Clear)) {
@@ -29,6 +30,10 @@ object SecretSpawnTimer : Hud.Component("ItemPickup", 0.5, 0.6, Hud.Type.Dungeon
 
     fun tick() {
         counter++
+    }
+
+    fun updateTime(time: Int) {
+        counter = time
     }
 
     override fun render(context: GuiGraphics) {

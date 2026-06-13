@@ -149,7 +149,16 @@ object Scoreboard {
             val completed = completedRooms + (if (!isBloodDone()) 1 else 0) + if (!DungeonMessages.inBoss) 1 else 0
             val total = if (totalRooms != 0) totalRooms else 36
 
-            val exploration = floor((secretsPercent / floor.secretFactor) / 100f * 40f).coerceIn(0f, 40f).toInt() + floor(completed.toFloat() / total * 60f).coerceIn(0f, 60f).toInt()
+            val totalSecrets = if (secretsFound == 0 || secretsPercent == 0f) 0 else floor(100 / secretsPercent * secretsFound + 0.5).toInt()
+
+            val exploration = floor.let {
+                val secretScore = if (totalSecrets > 0) {
+                    floor(secretsFound.toDouble() / (totalSecrets.toDouble() * it.secretFactor) * 40.0)
+                        .toInt().coerceIn(0, 40)
+                } else 0
+
+                secretScore + floor(completed.toFloat() / total * 60f).coerceIn(0f, 60f).toInt()
+            }
 
             val skillRooms = floor(completed.toFloat() / total * 80f).coerceIn(0f, 80f).toInt()
             val puzzlePenalty = (puzzleCount - puzzles.count { it.status == PuzzleStatus.Completed }) * 10
