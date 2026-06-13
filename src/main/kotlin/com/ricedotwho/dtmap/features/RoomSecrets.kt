@@ -1,13 +1,12 @@
 package com.ricedotwho.dtmap.features
 
 import com.ricedotwho.dtmap.DtMap.mc
-import com.ricedotwho.dtmap.config.C3Other
 import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.features.map.DungeonMap
 import com.ricedotwho.dtmap.gui.Hud
 import com.ricedotwho.dtmap.gui.Hud.Condition
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.minecraft.client.gui.GuiGraphics
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
@@ -30,7 +29,7 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
             }
         }
 
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             currentRoomSecrets = null
         }
     }
@@ -49,7 +48,7 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
         }
     }
 
-    override fun render(context: GuiGraphics) {
+    override fun render(context: GuiGraphicsExtractor) {
         val currentRoomSecrets = currentRoomSecrets ?: return
         val currentRoom = DungeonMap.roomPlayerIn() ?: return
 
@@ -61,11 +60,11 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
             else -> Color.GREEN
         }
 
-        context.drawString(mc.font, "${currentRoomSecrets}/${secretsInRoom}", 0, 0, color.rgb, true)
+        context.text(mc.font, "${currentRoomSecrets}/${secretsInRoom}", 0, 0, color.rgb, true)
     }
 
-    override fun example(context: GuiGraphics) {
-        context.drawString(mc.font, "2/4", 0, 0, Color.YELLOW.rgb, true)
+    override fun example(context: GuiGraphicsExtractor) {
+        context.text(mc.font, "2/4", 0, 0, Color.YELLOW.rgb, true)
     }
 
     override fun bounds(): Pair<Double, Double> =

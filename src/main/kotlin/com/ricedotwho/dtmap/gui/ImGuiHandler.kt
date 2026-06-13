@@ -1,9 +1,6 @@
 package com.ricedotwho.dtmap.gui
 
-import com.mojang.blaze3d.opengl.GlDevice
 import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.opengl.GlTexture
-import com.mojang.blaze3d.systems.RenderSystem
 import com.ricedotwho.dtmap.DtMap.mc
 import imgui.*
 import imgui.extension.implot.ImPlot
@@ -15,9 +12,9 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
 import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
-import org.lwjgl.opengl.GL11C
 import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL30C
+import org.lwjgl.opengl.GL33C
 import java.io.IOException
 import java.io.UncheckedIOException
 
@@ -154,12 +151,11 @@ object ImGuiHandler {
 
     fun start() {
         val framebuffer = Minecraft.getInstance().mainRenderTarget
-        GlStateManager._glBindFramebuffer(
+        GL33C.glBindFramebuffer(
             GL30C.GL_FRAMEBUFFER,
-            (framebuffer.getColorTexture() as GlTexture)
-                .getFbo((RenderSystem.getDevice() as GlDevice).directStateAccess(), null)
+            GL33C.glGenFramebuffers()
         )
-        GL11C.glViewport(0, 0, framebuffer.width, framebuffer.height)
+        GlStateManager._viewport(0, 0, framebuffer.width, framebuffer.height);
 
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()

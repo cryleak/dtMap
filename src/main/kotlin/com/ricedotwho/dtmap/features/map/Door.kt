@@ -3,7 +3,7 @@ package com.ricedotwho.dtmap.features.map
 import com.ricedotwho.dtmap.config.C1Map
 import com.ricedotwho.dtmap.features.SoloClear
 import com.ricedotwho.dtmap.utils.darker
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 class Door private constructor(val pos: Vec2i, var type: Type, val rooms: MutableList<Room.Tile>, nothing: Boolean = false) {
@@ -43,7 +43,7 @@ class Door private constructor(val pos: Vec2i, var type: Type, val rooms: Mutabl
         )
     }
 
-    fun render(context: GuiGraphics) {
+    fun render(context: GuiGraphicsExtractor) {
         val size = size()
         if (size != Vec2i(0, 0)) {
             val matrices = context.pose()

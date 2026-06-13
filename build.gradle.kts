@@ -4,7 +4,7 @@ import org.gradle.internal.os.OperatingSystem
 
 plugins {
     kotlin("jvm") version "2.3.0"
-    id("fabric-loom") version "1.15-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version "1.16-SNAPSHOT"
     id("maven-publish")
 }
 
@@ -16,7 +16,7 @@ base {
     archivesName.set(project.property("archives_base_name") as String)
 }
 
-val targetJavaVersion = 21
+val targetJavaVersion = 25
 val isMac = OperatingSystem.current().isMacOsX
 val isArm64 = setOf("aarch64", "arm64").contains(System.getProperty("os.arch"))
 
@@ -69,11 +69,11 @@ dependencies {
     // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
     // mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("kotlin_loader_version")}")
+    //mappings(loom.officialMojangMappings())
+    implementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
+    implementation("net.fabricmc:fabric-language-kotlin:${project.property("kotlin_loader_version")}")
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
 
     val includeImplementation = fun(str: String) {
         implementation(str)
@@ -90,13 +90,13 @@ dependencies {
         "net.hypixel:mod-api:1.0.1"
     ).forEach(includeImplementation)
 
-    modCompileOnly("maven.modrinth:sodium:mc1.21.11-0.8.6-fabric") { isTransitive = false }
+    compileOnly("maven.modrinth:sodium:mc1.21.11-0.8.6-fabric") { isTransitive = false }
 
     includeImplementation("org.reflections:reflections:0.10.2")
     includeImplementation("org.javassist:javassist:3.29.2-GA")
 
     implementation("com.google.code.gson:gson:2.10.1")
-    modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
+    runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
 
     if (isMac) {
         val lwjglFreetypeNatives = if (isArm64) "natives-macos-arm64" else "natives-macos"
@@ -104,7 +104,7 @@ dependencies {
         minecraftRuntimeLibraries("org.lwjgl:lwjgl-freetype:3.3.6:$lwjglFreetypeNatives")
     }
 
-    modCompileOnly("maven.modrinth:iris:${property("iris")}")
+    implementation("maven.modrinth:iris:${property("iris")}")
 }
 
 if (isMac) {

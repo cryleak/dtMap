@@ -7,16 +7,16 @@ import com.ricedotwho.dtmap.utils.Location
 import com.ricedotwho.dtmap.utils.drawBlockOverlay
 import com.ricedotwho.dtmap.utils.drawLineBox
 import com.ricedotwho.dtmap.utils.toAABB
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.world.entity.monster.zombie.Zombie
 
 object Mimic {
     fun register() {
-        WorldRenderEvents.END_MAIN.register(WorldRender)
+        LevelRenderEvents.END_MAIN.register(WorldRender)
     }
 
-    val WorldRender = WorldRenderEvents.EndMain { context ->
+    val WorldRender = LevelRenderEvents.EndMain { context ->
         val chest = Scan.chest ?: return@EndMain
 
         if (C2Esp.mimicEspFillColor.alpha > 0) context.drawBlockOverlay(chest, C2Esp.mimicEspFillColor, C2Esp.mimicLegit)

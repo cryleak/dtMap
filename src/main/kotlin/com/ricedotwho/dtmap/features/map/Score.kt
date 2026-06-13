@@ -6,9 +6,9 @@ import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.features.SoloClear
 import com.ricedotwho.dtmap.gui.Hud
 import com.ricedotwho.dtmap.utils.Location
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 object Score : Hud.Component("Score", 0.1, 0.5, Hud.Type.Dungeon, staticRenderConditions = mutableListOf(Hud.Condition.Clear, Hud.Condition.Alt)) {
@@ -36,7 +36,7 @@ object Score : Hud.Component("Score", 0.1, 0.5, Hud.Type.Dungeon, staticRenderCo
             }
         }
 
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             score = 0
             foundSecretsCount = 0
             sent270Message = false
@@ -48,7 +48,7 @@ object Score : Hud.Component("Score", 0.1, 0.5, Hud.Type.Dungeon, staticRenderCo
         }
     }
 
-    fun actualRender(context: GuiGraphics, forMap: Boolean) {
+    fun actualRender(context: GuiGraphicsExtractor, forMap: Boolean) {
         val totalSecrets = Scoreboard.stats.calculateTotalSecrets()
         val secrets = "§b${Scoreboard.stats.secretsFound}§7-§e${Scoreboard.stats.calculateMinimumSecrets()}§7-§c${totalSecrets}"
         val scoreText = "§${if (score < 270) "c" else if (score < 300) "e" else "a"}${score}"
@@ -69,24 +69,24 @@ object Score : Hud.Component("Score", 0.1, 0.5, Hud.Type.Dungeon, staticRenderCo
         val textSize = mc.font.width("$line1   $line2") * if (!forMap) scale else 1f
         val oneLine = textSize < size
         if (oneLine) {
-            context.drawCenteredString(mc.font, "$secrets   ${if (line2.isNotEmpty()) "$line2   " else ""}$unfoundSecrets$scoreText", 0, 0, Color.WHITE.rgb)
+            context.centeredText(mc.font, "$secrets   ${if (line2.isNotEmpty()) "$line2   " else ""}$unfoundSecrets$scoreText", 0, 0, Color.WHITE.rgb)
         } else {
-            context.drawCenteredString(mc.font, line1, 0, 0, Color.WHITE.rgb)
-            context.drawCenteredString(mc.font, line2, 0, mc.font.lineHeight, Color.WHITE.rgb)
+            context.centeredText(mc.font, line1, 0, 0, Color.WHITE.rgb)
+            context.centeredText(mc.font, line2, 0, mc.font.lineHeight, Color.WHITE.rgb)
         }
     }
 
-    fun actualExample(context: GuiGraphics) {
-        context.drawCenteredString(mc.font, "§b10§7-§e49§7-§c55     §a300", 0, 0, Color.WHITE.rgb)
-        context.drawCenteredString(mc.font, "§7D: §c1  §7M: §c✖  §7P: §c✖  §c0§7/§a5", 0, mc.font.lineHeight + 2, Color.WHITE.rgb)
+    fun actualExample(context: GuiGraphicsExtractor) {
+        context.centeredText(mc.font, "§b10§7-§e49§7-§c55     §a300", 0, 0, Color.WHITE.rgb)
+        context.centeredText(mc.font, "§7D: §c1  §7M: §c✖  §7P: §c✖  §c0§7/§a5", 0, mc.font.lineHeight + 2, Color.WHITE.rgb)
     }
 
-    override fun render(context: GuiGraphics) {
+    override fun render(context: GuiGraphicsExtractor) {
         if (C1Map.scoreCalculation != 2) return
         actualRender(context, false)
     }
 
-    override fun example(context: GuiGraphics) {
+    override fun example(context: GuiGraphicsExtractor) {
         if (C1Map.scoreCalculation != 2) return
         actualExample(context)
     }

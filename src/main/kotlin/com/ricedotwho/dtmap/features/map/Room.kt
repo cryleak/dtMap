@@ -6,7 +6,7 @@ import com.ricedotwho.dtmap.config.C3Other
 import com.ricedotwho.dtmap.features.SoloClear
 import com.ricedotwho.dtmap.features.map.Scan.roomsList
 import com.ricedotwho.dtmap.utils.darker
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
@@ -158,7 +158,7 @@ class Room(var type: Type, var shape: Shape, var data: RoomData? = null, var hei
         return arrayOf(color)
     }
 
-    fun render(context: GuiGraphics) {
+    fun render(context: GuiGraphicsExtractor) {
         val legitMode = SoloClear.legit(C1Map.legitMode)
         if (legitMode && state == State.UNDISCOVERED) return
 
@@ -234,7 +234,7 @@ class Room(var type: Type, var shape: Shape, var data: RoomData? = null, var hei
         }
     }
 
-    fun renderName(context: GuiGraphics, textFactor: Float) {
+    fun renderName(context: GuiGraphicsExtractor, textFactor: Float) {
         val matrices = context.pose()
         val fontHeight = mc.font.lineHeight
 
@@ -261,7 +261,7 @@ class Room(var type: Type, var shape: Shape, var data: RoomData? = null, var hei
                         else -> Color(255, 255, 255).rgb
                     }
 
-                    context.drawCenteredString(
+                    context.centeredText(
                         mc.font,
                         value,
                         0,

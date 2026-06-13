@@ -2,8 +2,8 @@ package com.ricedotwho.dtmap.features.map
 
 import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.utils.equalsAny
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.registries.BuiltInRegistries
@@ -29,13 +29,13 @@ object Scan {
     )
 
     fun register() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(Unload)
-        ClientTickEvents.END_WORLD_TICK.register(WorldTick)
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register(Unload)
+        ClientTickEvents.END_LEVEL_TICK.register(WorldTick)
     }
 
     var chest: BlockPos? = null
-    val WorldTick = ClientTickEvents.EndWorldTick { level ->
-        if (rooms.isEmpty() || chest != null) return@EndWorldTick
+    val WorldTick = ClientTickEvents.EndLevelTick { level ->
+        if (rooms.isEmpty() || chest != null) return@EndLevelTick
 
         chest = rooms.firstNotNullOfOrNull { room ->
             if (room.rotation == Room.Rotation.NONE) return@firstNotNullOfOrNull null
@@ -44,10 +44,10 @@ object Scan {
             val pos = chests.find { it is TrappedChestBlockEntity }?.blockPos ?: return@firstNotNullOfOrNull null
             room.mimic = true
             pos
-        } ?: return@EndWorldTick
+        } ?: return@EndLevelTick
     }
 
-    val Unload = ClientWorldEvents.AfterClientWorldChange { _, _ ->
+    val Unload = ClientLevelEvents.AfterClientLevelChange { _, _ ->
         rooms.clear()
         roomsList = Array(36) {
             val x = it / 6

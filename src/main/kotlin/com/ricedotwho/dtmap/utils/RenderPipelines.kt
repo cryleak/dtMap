@@ -1,10 +1,12 @@
 package com.ricedotwho.dtmap.utils
 
+import com.mojang.blaze3d.pipeline.DepthStencilState
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.platform.CompareOp
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.renderer.RenderPipelines
+
 
 /*
  * Original code Copyright (c) 2026, odtheking (https://github.com/odtheking/Odin/blob/main/src/main/kotlin/com/odtheking/odin/utils/render/CustomRenderPipelines.kt)
@@ -37,11 +39,12 @@ import net.minecraft.client.renderer.RenderPipelines
  */
 
 object RenderPipelines {
+    val NO_DEPTH: DepthStencilState = DepthStencilState(CompareOp.ALWAYS_PASS, false)
 
     val LINES_THROUGH_WALLS: RenderPipeline = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation("pipeline/lines")
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthStencilState(NO_DEPTH)
             .build()
     )
 
@@ -49,7 +52,7 @@ object RenderPipelines {
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation("pipeline/debug_quads_through_walls")
             .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthStencilState(NO_DEPTH)
             .build()
     )
 }

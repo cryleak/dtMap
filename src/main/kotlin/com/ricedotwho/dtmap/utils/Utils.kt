@@ -4,7 +4,7 @@ import com.ricedotwho.dtmap.DtMap.mc
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
@@ -40,8 +40,8 @@ inline val Entity.renderZ: Double
 fun Any?.equalsAny(vararg options: Any?): Boolean =
     options.any { this == it }
 
-fun Player.clickSlot(containerId: Int, slotIndex: Int, button: Int = 0, clickType: ClickType = ClickType.PICKUP) {
-    mc.gameMode?.handleInventoryMouseClick(containerId, slotIndex, button, clickType, this)
+fun Player.clickSlot(containerId: Int, slotIndex: Int, button: Int = 0, clickType: ContainerInput = ContainerInput.PICKUP) {
+    mc.gameMode?.handleContainerInput(containerId, slotIndex, button, clickType, this)
 }
 
 private val romanMap = mapOf('I' to 1, 'V' to 5, 'X' to 10, 'L' to 50, 'C' to 100, 'D' to 500, 'M' to 1000)

@@ -2,7 +2,7 @@ package com.ricedotwho.dtmap.utils
 
 import com.ricedotwho.dtmap.DtMap.mc
 import com.ricedotwho.dtmap.events.ChatEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import java.util.regex.Pattern
 
 object DungeonMessages {
@@ -52,7 +52,7 @@ object DungeonMessages {
     var seenDungeonStart = false
 
     fun register() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             inBoss = false
             dungeonEnded = false
             seenDungeonStart = false

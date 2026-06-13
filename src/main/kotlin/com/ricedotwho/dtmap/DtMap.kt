@@ -22,10 +22,10 @@ import com.ricedotwho.dtmap.utils.Scheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import net.fabricmc.api.ClientModInitializer
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.resources.Identifier
@@ -54,7 +54,7 @@ object DtMap : ClientModInitializer {
 
         val keybindCategory = KeyMapping.Category(Identifier.fromNamespaceAndPath("dtmap", "dungeons"))
 
-        keybindShowHud = KeyBindingHelper.registerKeyBinding(KeyMapping(
+        keybindShowHud = KeyMappingHelper.registerKeyMapping(KeyMapping(
             "key.dtmap.hud",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_LEFT_ALT,

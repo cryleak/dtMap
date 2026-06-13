@@ -9,8 +9,8 @@ import com.ricedotwho.dtmap.gui.Hud
 import com.ricedotwho.dtmap.utils.DungeonMessages
 import com.ricedotwho.dtmap.utils.Location
 import com.ricedotwho.dtmap.utils.MapImageLoader
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.gui.components.PlayerFaceRenderer
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.components.PlayerFaceExtractor
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import java.awt.Color
@@ -22,7 +22,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
     val whiteCheck = Identifier.fromNamespaceAndPath("dtmap", "map/white_check.png")
     val questionMark = Identifier.fromNamespaceAndPath("dtmap", "map/question.png")
 
-    override fun render(context: GuiGraphics) {
+    override fun render(context: GuiGraphicsExtractor) {
         if (!C1Map.isOn || Location.island != Location.Island.Dungeon) return
 
         val textFactor = 1 / C1Map.textScaling
@@ -87,7 +87,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
                 if (renderNames) {
                     matrices.pushMatrix()
                     matrices.scale(C1Map.playerNamesScaling)
-                    context.drawCenteredString(mc.font, player.name, 0, 8, C1Map.playerNameColor.rgb)
+                    context.centeredText(mc.font, player.name, 0, 8, C1Map.playerNameColor.rgb)
                     matrices.popMatrix()
                 }
 
@@ -101,7 +101,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
                 }
 
                 if (self && C1Map.playerMCMapPointer) context.blit(RenderPipelines.GUI_TEXTURED, selfMarker, 5, 5, 10f, 10f, -10, -10, 10, 10)
-                else if (player.skin != null) PlayerFaceRenderer.draw(context, player.skin!!, -5, -5, 10)
+                else if (player.skin != null) PlayerFaceExtractor.extractRenderState(context, player.skin!!, -5, -5, 10)
                 matrices.popMatrix()
             }
 
@@ -123,7 +123,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
         matrices.popMatrix()
     }
 
-    override fun example(context: GuiGraphics) {
+    override fun example(context: GuiGraphicsExtractor) {
         val matrices = context.pose()
         val roomsX = 116
         val roomsZ = 116
@@ -149,7 +149,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
             context.fill(0, 0, roomsX + offset * 2, roomsZ + offset * 2, C1Map.backgroundColor.rgb)
         }
 
-        context.drawCenteredString(mc.font, "MAP", roomsX/2 + offset, roomsZ/2 + offset - mc.font.lineHeight, Color.WHITE.rgb)
+        context.centeredText(mc.font, "MAP", roomsX/2 + offset, roomsZ/2 + offset - mc.font.lineHeight, Color.WHITE.rgb)
 
         if (C1Map.scoreCalculation == 1) {
             matrices.pushMatrix()

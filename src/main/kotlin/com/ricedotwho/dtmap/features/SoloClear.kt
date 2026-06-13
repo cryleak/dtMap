@@ -16,13 +16,15 @@ import com.ricedotwho.dtmap.utils.Location
 import com.ricedotwho.dtmap.utils.clickSlot
 import com.ricedotwho.dtmap.utils.drawFilled
 import com.ricedotwho.dtmap.utils.drawLineBox
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.AABB
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 
@@ -41,8 +43,8 @@ object SoloClear {
         isSoloClearing() || bool
 
     fun register() {
-        HudRenderCallback.EVENT.register(HudCallback)
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("dtm", "SoloClearHud"), HudCallback)
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             lastClickedIn = null
             lastClosed = 0L
             fuckCurrentMap = false
@@ -54,21 +56,21 @@ object SoloClear {
 
     var lastClosed = 0L
     var fuckCurrentMap = false
-    val HudCallback = HudRenderCallback { _, _ ->
-        if (!C3Other.soloClearingInstaJoin || !isSoloClearing() || Location.island != Location.Island.Dungeon) return@HudRenderCallback
+    val HudCallback = HudElement { _, _ ->
+        if (!C3Other.soloClearingInstaJoin || !isSoloClearing() || Location.island != Location.Island.Dungeon) return@HudElement
 
-        val player = mc.player ?: return@HudRenderCallback
+        val player = mc.player ?: return@HudElement
 
-        val screen = mc.screen as? AbstractContainerScreen<*> ?: return@HudRenderCallback
-        if (screen.menu.containerId == lastClickedIn) return@HudRenderCallback
+        val screen = mc.screen as? AbstractContainerScreen<*> ?: return@HudElement
+        if (screen.menu.containerId == lastClickedIn) return@HudElement
 
         if (screen.title.string != "Undersized party!") {
-            return@HudRenderCallback
+            return@HudElement
         }
 
         val slot = screen.menu.getSlot(13)
         if (slot.item.hoverName.string != "Undersized party!") {
-            return@HudRenderCallback
+            return@HudElement
         }
 
         player.clickSlot(screen.menu.containerId, slot.index)
@@ -129,7 +131,7 @@ object SoloClear {
         }
     }
 
-    fun renderDoorEsp(context: WorldRenderContext) {
+    fun renderDoorEsp(context: LevelRenderContext) {
         val roomPlayerIn = DungeonMap.roomPlayerInNoBoundsCheck()
 
         Scan.doors.forEach { door ->

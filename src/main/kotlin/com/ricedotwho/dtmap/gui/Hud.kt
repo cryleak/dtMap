@@ -11,7 +11,7 @@ import imgui.flag.ImGuiWindowFlags
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.resources.Identifier
 import java.awt.Color
@@ -78,7 +78,7 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
             components.add(this)
         }
 
-        internal fun position(context: GuiGraphics): Pair<Int, Int> =
+        internal fun position(context: GuiGraphicsExtractor): Pair<Int, Int> =
             position(context.guiWidth(), context.guiHeight())
 
         internal fun position(width: Int, height: Int) =
@@ -97,11 +97,11 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
             return staticRenderConditions.any { it.predicate() }
         }
 
-        abstract fun render(context: GuiGraphics)
-        abstract fun example(context: GuiGraphics)
+        abstract fun render(context: GuiGraphicsExtractor)
+        abstract fun example(context: GuiGraphicsExtractor)
         abstract fun bounds(): Pair<Double, Double>
 
-        internal fun offsetBounds(context: GuiGraphics): Pair<Int, Int> =
+        internal fun offsetBounds(context: GuiGraphicsExtractor): Pair<Int, Int> =
             offsetBounds(context.guiWidth(), context.guiHeight())
 
         internal open fun offsetBounds(width: Int, height: Int): Pair<Int, Int> =
@@ -112,7 +112,7 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
             return Pair(bounds.first * scale, bounds.second * scale)
         }
 
-        internal fun internalRender(context: GuiGraphics, example: Boolean) {
+        internal fun internalRender(context: GuiGraphicsExtractor, example: Boolean) {
             if (mc.gui.tabList.visible || (!example && !shouldRender())) return
 
             val pose = context.pose()
@@ -235,13 +235,13 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
         components.forEach { it.internalRender(context, false) }
     }
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, deltaTicks: Float) {
-        super.render(context, mouseX, mouseY, deltaTicks)
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, deltaTicks: Float) {
+        super.extractRenderState(context, mouseX, mouseY, deltaTicks)
         val width = context.guiWidth()
         val height = context.guiHeight()
 
-        context.vLine(width / 2, 0, height, -0xffbbbc)
-        context.hLine(0, width, height / 2, -0xffbbbc)
+        context.verticalLine(width / 2, 0, height, -0xffbbbc)
+        context.horizontalLine(0, width, height / 2, -0xffbbbc)
 
         components.forEach { it.internalRender(context, true) }
 
@@ -249,7 +249,7 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
             val bounds = selected!!.internalBounds()
             val (posX, posY) = selected!!.position(context)
             val offset = selected!!.offsetBounds(context)
-            context.renderOutline(posX + offset.first, posY + offset.second, bounds.first.toInt(), bounds.second.toInt(), Color.RED.rgb)
+            context.outline(posX + offset.first, posY + offset.second, bounds.first.toInt(), bounds.second.toInt(), Color.RED.rgb)
         }
     }
 

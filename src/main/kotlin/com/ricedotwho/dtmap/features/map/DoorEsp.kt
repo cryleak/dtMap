@@ -8,9 +8,9 @@ import com.ricedotwho.dtmap.utils.DungeonMessages
 import com.ricedotwho.dtmap.utils.Location
 import com.ricedotwho.dtmap.utils.drawFilled
 import com.ricedotwho.dtmap.utils.drawLineBox
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.AABB
@@ -23,8 +23,8 @@ object DoorEsp {
     var doorBlockPositions = mutableSetOf<BlockPos>()
 
     fun register() {
-        WorldRenderEvents.END_MAIN.register(DoorRenderer)
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        LevelRenderEvents.END_MAIN.register(DoorRenderer)
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             witherKeys = 0
             bloodKey = false
             bloodOpened = false
@@ -76,7 +76,7 @@ object DoorEsp {
         }
     }
 
-    private val DoorRenderer = WorldRenderEvents.EndMain { context ->
+    private val DoorRenderer = LevelRenderEvents.EndMain { context ->
         if (SoloClear.isSoloClearing()) {
             if (C3Other.soloClearingDoorEsp) SoloClear.renderDoorEsp(context)
             return@EndMain

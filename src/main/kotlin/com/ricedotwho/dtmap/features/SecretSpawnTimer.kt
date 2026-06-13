@@ -4,14 +4,13 @@ import com.ricedotwho.dtmap.DtMap
 import com.ricedotwho.dtmap.events.ChatEvents
 import com.ricedotwho.dtmap.gui.Hud
 import com.ricedotwho.dtmap.utils.DungeonMessages
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.network.protocol.game.ClientboundSetTimePacket
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 object SecretSpawnTimer : Hud.Component("ItemPickup", 0.5, 0.6, Hud.Type.Dungeon, staticRenderConditions = mutableListOf(Hud.Condition.Clear)) {
     fun register() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             works = false
         }
 
@@ -36,7 +35,7 @@ object SecretSpawnTimer : Hud.Component("ItemPickup", 0.5, 0.6, Hud.Type.Dungeon
         counter = time
     }
 
-    override fun render(context: GuiGraphics) {
+    override fun render(context: GuiGraphicsExtractor) {
         if (!works) return
 
         val away = 20 - counter % 20
@@ -47,11 +46,11 @@ object SecretSpawnTimer : Hud.Component("ItemPickup", 0.5, 0.6, Hud.Type.Dungeon
             else -> Color(255, 85, 85)
         }
 
-        context.drawCenteredString(DtMap.mc.font, "$away", 0, 0, color.rgb)
+        context.centeredText(DtMap.mc.font, "$away", 0, 0, color.rgb)
     }
 
-    override fun example(context: GuiGraphics) {
-        context.drawCenteredString(DtMap.mc.font, "2", 0, 0, Color(85, 255, 85).rgb)
+    override fun example(context: GuiGraphicsExtractor) {
+        context.centeredText(DtMap.mc.font, "2", 0, 0, Color(85, 255, 85).rgb)
     }
 
     override fun offsetBounds(width: Int, height: Int): Pair<Int, Int> =

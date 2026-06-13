@@ -9,8 +9,8 @@ import com.ricedotwho.dtmap.utils.Location
 import com.ricedotwho.dtmap.utils.drawFilled
 import com.ricedotwho.dtmap.utils.drawLineFromCursor
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
 import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
@@ -38,7 +38,7 @@ object Key {
             if (witherKeyPickup || bloodKeyPickup) DtMap.mc.player?.playSound(KEY_SOUND, C3Other.keyPickupPlingVolume, 1.0f)
         }
 
-        WorldRenderEvents.END_MAIN.register { ctx ->
+        LevelRenderEvents.END_MAIN.register { ctx ->
             if (SoloClear.isSoloClearing()) return@register
 
             currentKey?.let {
@@ -75,7 +75,7 @@ object Key {
             } ?: return@register
         }
 
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             currentKey = null
         }
     }

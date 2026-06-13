@@ -1,14 +1,14 @@
 package com.ricedotwho.dtmap.features.map
 
 import com.ricedotwho.dtmap.events.MapEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 
 object Prince {
     var legitPrince: Boolean = true
     var cheaterPrince: Boolean = true
 
     fun register() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             legitPrince = true
             cheaterPrince = true
         }

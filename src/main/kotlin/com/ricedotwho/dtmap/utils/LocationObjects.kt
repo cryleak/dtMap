@@ -7,9 +7,9 @@ import com.ricedotwho.dtmap.events.LocationEvents
 import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.features.map.DungeonMap
 import com.ricedotwho.dtmap.features.map.Vec2i
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.BlockPos
 import java.nio.file.Files
@@ -157,7 +157,7 @@ object LocationObjects {
             save()
         }
 
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             registry.forEach { storage -> storage.filteredValues.clear() }
             locations.clear()
             newLocations.clear()

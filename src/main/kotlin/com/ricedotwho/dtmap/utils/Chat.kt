@@ -12,6 +12,10 @@ object Chat {
     fun send(message: String, overlay: Boolean = false) {
         val player = Minecraft.getInstance().player ?: return
         val text: Component = Component.literal(PREFIX).append(Component.literal(message))
-        player.displayClientMessage(text, overlay)
+        if (overlay) {
+            player.sendOverlayMessage(text)
+        } else {
+            player.sendSystemMessage(text)
+        }
     }
 }

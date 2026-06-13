@@ -7,8 +7,8 @@ import com.ricedotwho.dtmap.utils.Chat
 import com.ricedotwho.dtmap.utils.DungeonMessages
 import com.ricedotwho.dtmap.utils.Location
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes
 import net.minecraft.world.level.saveddata.maps.MapId
@@ -26,7 +26,7 @@ object DungeonMap {
         DoorEsp.register()
         Prince.register()
 
-        ClientTickEvents.END_WORLD_TICK.register { world ->
+        ClientTickEvents.END_LEVEL_TICK.register { world ->
             if (shouldScan) {
                 // TODO: stop scanning the entire world, start scanning based off loaded chunks
                 Scan.scan(world)
@@ -36,7 +36,7 @@ object DungeonMap {
             updatePlayerRoom()
         }
         ClientChunkEvents.CHUNK_LOAD.register(ChunkLoad)
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             mapID = null
             mapCenter = null
             shouldScan = false

@@ -2,7 +2,7 @@ package com.ricedotwho.dtmap.features.map
 
 import com.ricedotwho.dtmap.config.C1Map
 import com.ricedotwho.dtmap.utils.darker
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import java.awt.Color
 
 // this is mostly used to track types of 1x1 rooms & whether the special column is fully scanned so we can mark the
@@ -23,7 +23,7 @@ object SpecialColumn {
     var opened1x1s = mutableSetOf<Room>()
 
     fun register() {
-        ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
+        ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             column = -1
             discoveredFullSpecialColumn = 0
             discovered1x1s = 0
