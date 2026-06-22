@@ -1,6 +1,11 @@
 package com.ricedotwho.dtmap.gui
 
+import com.mojang.blaze3d.opengl.GlBackend
+import com.mojang.blaze3d.opengl.GlDevice
 import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.opengl.GlTexture
+import com.mojang.blaze3d.systems.GpuDeviceBackend
+import com.mojang.blaze3d.systems.RenderSystem
 import com.ricedotwho.dtmap.DtMap.mc
 import imgui.*
 import imgui.extension.implot.ImPlot
@@ -14,6 +19,7 @@ import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
 import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL30C
+import org.lwjgl.opengl.GL33
 import org.lwjgl.opengl.GL33C
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -152,8 +158,9 @@ object ImGuiHandler {
     fun start() {
         val framebuffer = Minecraft.getInstance().mainRenderTarget
         GL33C.glBindFramebuffer(
-            GL30C.GL_FRAMEBUFFER,
-            GL33C.glGenFramebuffers()
+            GL33C.GL_FRAMEBUFFER,
+            (framebuffer.getColorTexture() as GlTexture)
+                .getFbo((RenderSystem.getDevice().backend as GlDevice).directStateAccess(), null)
         )
         GlStateManager._viewport(0, 0, framebuffer.width, framebuffer.height);
 
@@ -167,7 +174,7 @@ object ImGuiHandler {
 
         imGuiGl3.renderDrawData(ImGui.getDrawData())
 
-        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+        GlStateManager._glBindFramebuffer(GL33.GL_FRAMEBUFFER, 0)
 
         if (ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) {
             val ptr = glfwGetCurrentContext()
@@ -183,18 +190,18 @@ object ImGuiHandler {
         if (glyphRanges == null) {
             val rangesBuilder = ImFontGlyphRangesBuilder()
 
-            rangesBuilder.addRanges(ImGui.getIO().getFonts().glyphRangesDefault)
-            rangesBuilder.addRanges(ImGui.getIO().getFonts().glyphRangesCyrillic)
-            rangesBuilder.addRanges(ImGui.getIO().getFonts().glyphRangesJapanese)
+            rangesBuilder.addRanges(ImGui.getIO().fonts.glyphRangesDefault)
+            rangesBuilder.addRanges(ImGui.getIO().fonts.glyphRangesCyrillic)
+            rangesBuilder.addRanges(ImGui.getIO().fonts.glyphRangesJapanese)
 
             glyphRanges = rangesBuilder.buildRanges()
         }
 
         val config = ImFontConfig()
-        config.setGlyphRanges(glyphRanges)
+        config.glyphRanges = glyphRanges
         try {
-            this::class.java.getClassLoader().getResourceAsStream(path).let {
-                val fontData = it.readAllBytes()
+            this::class.java.classLoader.getResourceAsStream(path).let {
+                val fontData = it?.readAllBytes()
                 return ImGui.getIO().fonts.addFontFromMemoryTTF(fontData, pixelSize, config)
             }
         } catch (e: IOException) {

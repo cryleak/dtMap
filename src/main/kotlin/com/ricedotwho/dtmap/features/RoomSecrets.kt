@@ -5,6 +5,7 @@ import com.ricedotwho.dtmap.events.MapEvents
 import com.ricedotwho.dtmap.features.map.DungeonMap
 import com.ricedotwho.dtmap.gui.Hud
 import com.ricedotwho.dtmap.gui.Hud.Condition
+import com.ricedotwho.dtmap.utils.Chat
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
@@ -20,11 +21,7 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
 
     fun register() {
         MapEvents.ON_PLAYER_ENTER_ROOM.register { room ->
-            if (room == null) {
-                currentRoomSecrets = null
-            }
-
-            room?.owner?.let {
+            if (room == null || room.owner == null) {
                 currentRoomSecrets = null
             }
         }
@@ -53,6 +50,7 @@ object RoomSecrets : Hud.Component("room-secrets", 0.2, 0.6, Hud.Type.Dungeon, 1
         val currentRoom = DungeonMap.roomPlayerIn() ?: return
 
         val secretsInRoom = currentRoom.owner!!.data!!.secrets
+        if (secretsInRoom == 0) return
         val percent = currentRoomSecrets.toFloat() / secretsInRoom.toFloat()
         val color = when {
             percent < 0.5f -> Color.RED
