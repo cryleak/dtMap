@@ -43,7 +43,7 @@ object SoloClear {
         isSoloClearing() || bool
 
     fun register() {
-        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("dtm", "SoloClearHud"), HudCallback)
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("dtm", "soloclearhud"), HudCallback)
         ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register { _, _ ->
             lastClickedIn = null
             lastClosed = 0L
