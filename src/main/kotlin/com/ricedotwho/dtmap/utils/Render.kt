@@ -191,7 +191,7 @@ fun LevelRenderContext.drawLineFromCursor(
 ) = poseStack().poseScopeWithCamera {
     val startPos = mc.player?.let { player ->
         player.renderPos.add(player.forward.add(0.0, player.eyeHeight.toDouble(), 0.0))
-    } ?: return
+    } ?: return@poseScopeWithCamera
 
     val buffer = this.bufferSource().getBuffer(RenderLayers.LINES_THROUGH_WALLS)
     PrimitiveRenderer.drawLine(it.last(), buffer, startPos, endPos, color.rgb, color.rgb, lineWidth)

@@ -13,11 +13,11 @@ import net.minecraft.world.entity.monster.zombie.Zombie
 
 object Mimic {
     fun register() {
-        LevelRenderEvents.END_MAIN.register(WorldRender)
+        LevelRenderEvents.COLLECT_SUBMITS.register(WorldRender)
     }
 
-    val WorldRender = LevelRenderEvents.EndMain { context ->
-        val chest = Scan.chest ?: return@EndMain
+    val WorldRender = LevelRenderEvents.CollectSubmits { context ->
+        val chest = Scan.chest ?: return@CollectSubmits
 
         if (C2Esp.mimicEspFillColor.alpha > 0) context.drawBlockOverlay(chest, C2Esp.mimicEspFillColor, C2Esp.mimicLegit)
         if (C2Esp.mimicEspOutlineColor.alpha > 0) context.drawLineBox(chest.toAABB(), C2Esp.mimicEspOutlineColor, C2Esp.mimicEspOutlineWidth, C2Esp.mimicLegit)

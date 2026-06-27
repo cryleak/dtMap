@@ -50,7 +50,7 @@ object RenderPipelines {
 
     val QUADS_THROUGH_WALLS: RenderPipeline = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
-            .withLocation("pipeline/debug_quads_through_walls")
+            .withLocation("pipeline/debug_filled_box")
             .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
             .withDepthStencilState(NO_DEPTH)
             .build()
