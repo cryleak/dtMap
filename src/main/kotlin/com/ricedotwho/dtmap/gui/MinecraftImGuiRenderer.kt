@@ -16,6 +16,8 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import imgui.ImDrawData
 import imgui.ImGui
+import imgui.ImVec4
+import imgui.flag.ImGuiBackendFlags
 import imgui.type.ImInt
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.BindGroupLayouts
@@ -41,7 +43,10 @@ class MinecraftImGuiRenderer {
 
     fun initialize() {
         uploadFontAtlas()
-        ImGui.getIO().backendRendererName = "dtmap_minecraft_gpu"
+        ImGui.getIO().apply {
+            backendRendererName = "dtmap_minecraft_gpu"
+            addBackendFlags(ImGuiBackendFlags.RendererHasVtxOffset)
+        }
     }
 
     fun render(drawData: ImDrawData?) {
@@ -61,7 +66,7 @@ class MinecraftImGuiRenderer {
 
         val vertexSize = DefaultVertexFormat.POSITION_TEX_COLOR.vertexSize
         val requiredVertexBytes = drawData.totalVtxCount * vertexSize
-        val requiredIndexBytes = drawData.totalIdxCount * ImDrawData.sizeOfImDrawIdx()
+        val requiredIndexBytes = drawData.totalIdxCount * Integer.BYTES
         ensureVertexBuffer(requiredVertexBytes.toLong())
         ensureIndexBuffer(requiredIndexBytes.toLong())
 
@@ -83,9 +88,9 @@ class MinecraftImGuiRenderer {
             pass.setPipeline(IMGUI_PIPELINE)
             pass.bindTexture("Sampler0", fontTextureView!!, fontSampler!!)
             pass.setVertexBuffer(0, vertexBuffer!!.slice(0, requiredVertexBytes.toLong()))
-            pass.setIndexBuffer(indexBuffer!!, indexType())
+            pass.setIndexBuffer(indexBuffer!!, IndexType.INT)
 
-            var globalVertexOffset = 0
+            val clipRect = ImVec4()
             var globalIndexOffset = 0
             for (listIndex in 0 until drawData.cmdListsCount) {
                 val commandCount = drawData.getCmdListCmdBufferSize(listIndex)
@@ -95,31 +100,26 @@ class MinecraftImGuiRenderer {
                         continue
                     }
 
-                    val clip = drawData.getCmdListCmdBufferClipRect(listIndex, commandIndex)
-                    val clipMinX = ((clip.x - drawData.displayPosX) * drawData.framebufferScaleX)
-                    val clipMinY = ((clip.y - drawData.displayPosY) * drawData.framebufferScaleY)
-                    val clipMaxX = ((clip.z - drawData.displayPosX) * drawData.framebufferScaleX)
-                    val clipMaxY = ((clip.w - drawData.displayPosY) * drawData.framebufferScaleY)
-
-                    val x = max(0, floor(clipMinX).toInt())
-                    val y = max(0, floor(clipMinY).toInt())
-                    val width = min(framebufferWidth, ceil(clipMaxX).toInt()) - x
-                    val height = min(framebufferHeight, ceil(clipMaxY).toInt()) - y
-                    if (width <= 0 || height <= 0) {
+                    drawData.getCmdListCmdBufferClipRect(clipRect, listIndex, commandIndex)
+                    val clipMinX = floor((clipRect.x - drawData.displayPosX) * drawData.framebufferScaleX).toInt().coerceIn(0, framebufferWidth)
+                    val clipMinY = floor((clipRect.y - drawData.displayPosY) * drawData.framebufferScaleY).toInt().coerceIn(0, framebufferHeight)
+                    val clipMaxX = ceil((clipRect.z - drawData.displayPosX) * drawData.framebufferScaleX).toInt().coerceIn(clipMinX, framebufferWidth)
+                    val clipMaxY = ceil((clipRect.w - drawData.displayPosY) * drawData.framebufferScaleY).toInt().coerceIn(clipMinY, framebufferHeight)
+                    if (clipMaxX <= clipMinX || clipMaxY <= clipMinY) {
                         continue
                     }
 
-                    pass.enableScissor(x, y, width, height)
+                    pass.bindTexture("Sampler0", fontTextureView!!, fontSampler!!)
+                    pass.enableScissor(clipMinX, clipMinY, clipMaxX - clipMinX, clipMaxY - clipMinY)
                     pass.drawIndexed(
                         elementCount,
                         1,
                         globalIndexOffset + drawData.getCmdListCmdBufferIdxOffset(listIndex, commandIndex),
-                        globalVertexOffset + drawData.getCmdListCmdBufferVtxOffset(listIndex, commandIndex),
+                        0,
                         0
                     )
                 }
 
-                globalVertexOffset += drawData.getCmdListVtxBufferSize(listIndex)
                 globalIndexOffset += drawData.getCmdListIdxBufferSize(listIndex)
             }
             pass.disableScissor()
@@ -146,7 +146,9 @@ class MinecraftImGuiRenderer {
         val width = ImInt()
         val height = ImInt()
         val pixels = ImGui.getIO().fonts.getTexDataAsRGBA32(width, height)
-        pixels.position(0)
+        val uploadPixels = pixels.duplicate().order(ByteOrder.LITTLE_ENDIAN)
+        uploadPixels.position(0)
+        uploadPixels.limit(min(uploadPixels.capacity(), width.get() * height.get() * RGBA_BYTES_PER_PIXEL))
 
         val device = RenderSystem.getDevice()
         fontTextureView?.close()
@@ -173,7 +175,7 @@ class MinecraftImGuiRenderer {
         )
 
         device.createCommandEncoder().also { encoder ->
-            encoder.writeToTexture(fontTexture!!, pixels, 0, 0, 0, 0, width.get(), height.get())
+            encoder.writeToTexture(fontTexture!!, uploadPixels.slice().order(ByteOrder.LITTLE_ENDIAN), 0, 0, 0, 0, width.get(), height.get())
             encoder.submit()
         }
         ImGui.getIO().fonts.setTexID(FONT_TEXTURE_ID)
@@ -212,6 +214,8 @@ class MinecraftImGuiRenderer {
         val scaleX = 2f / drawData.displaySizeX
         val scaleY = 2f / drawData.displaySizeY
         val sourceVertexSize = ImDrawData.sizeOfImDrawVert()
+        var globalVertexOffset = 0
+        var globalIndexOffset = 0
 
         for (listIndex in 0 until drawData.cmdListsCount) {
             val vertices = drawData.getCmdListVtxBufferData(listIndex).order(ByteOrder.LITTLE_ENDIAN)
@@ -233,19 +237,34 @@ class MinecraftImGuiRenderer {
             }
 
             val indices = drawData.getCmdListIdxBufferData(listIndex)
-            indices.position(0)
-            val indexBytes = drawData.getCmdListIdxBufferSize(listIndex) * ImDrawData.sizeOfImDrawIdx()
-            val limitedIndices = indices.slice()
-            limitedIndices.limit(indexBytes)
-            indexUpload.put(limitedIndices)
+            indices.order(ByteOrder.LITTLE_ENDIAN)
+            val commandCount = drawData.getCmdListCmdBufferSize(listIndex)
+            for (commandIndex in 0 until commandCount) {
+                val commandIndexOffset = drawData.getCmdListCmdBufferIdxOffset(listIndex, commandIndex)
+                val commandVertexOffset = drawData.getCmdListCmdBufferVtxOffset(listIndex, commandIndex)
+                val elementCount = drawData.getCmdListCmdBufferElemCount(listIndex, commandIndex)
+                for (elementIndex in 0 until elementCount) {
+                    val sourceIndex = readIndex(indices, commandIndexOffset + elementIndex)
+                    val targetIndex = globalIndexOffset + commandIndexOffset + elementIndex
+                    indexUpload.putInt(
+                        targetIndex * Integer.BYTES,
+                        globalVertexOffset + commandVertexOffset + sourceIndex
+                    )
+                }
+            }
+
+            globalVertexOffset += vertexCount
+            globalIndexOffset += drawData.getCmdListIdxBufferSize(listIndex)
         }
+
+        indexUpload.position(drawData.totalIdxCount * Integer.BYTES)
     }
 
     private fun growBufferSize(requiredSize: Long): Long = max(MIN_BUFFER_SIZE, requiredSize * 3 / 2)
 
-    private fun indexType(): IndexType = when (ImDrawData.sizeOfImDrawIdx()) {
-        java.lang.Short.BYTES -> IndexType.SHORT
-        Integer.BYTES -> IndexType.INT
+    private fun readIndex(indices: ByteBuffer, index: Int): Int = when (ImDrawData.sizeOfImDrawIdx()) {
+        java.lang.Short.BYTES -> indices.getShort(index * java.lang.Short.BYTES).toInt() and 0xFFFF
+        Integer.BYTES -> indices.getInt(index * Integer.BYTES)
         else -> error("Unsupported ImDrawIdx size: ${ImDrawData.sizeOfImDrawIdx()}")
     }
 
@@ -266,5 +285,6 @@ class MinecraftImGuiRenderer {
 
         private const val FONT_TEXTURE_ID = 1L
         private const val MIN_BUFFER_SIZE = 4096L
+        private const val RGBA_BYTES_PER_PIXEL = 4
     }
 }
