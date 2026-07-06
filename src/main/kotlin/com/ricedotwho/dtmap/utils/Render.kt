@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.ricedotwho.dtmap.DtMap.mc
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
+import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.client.renderer.rendertype.RenderTypes
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
@@ -193,8 +194,9 @@ fun LevelRenderContext.drawLineFromCursor(
         player.renderPos.add(player.forward.add(0.0, player.eyeHeight.toDouble(), 0.0))
     } ?: return@poseScopeWithCamera
 
-    val buffer = this.bufferSource().getBuffer(RenderLayers.LINES_THROUGH_WALLS)
-    PrimitiveRenderer.drawLine(it.last(), buffer, startPos, endPos, color.rgb, color.rgb, lineWidth)
+    submitGeometry(RenderLayers.LINES_THROUGH_WALLS) { pose, buffer ->
+        PrimitiveRenderer.drawLine(pose, buffer, startPos, endPos, color.rgb, color.rgb, lineWidth)
+    }
 }
 
 fun LevelRenderContext.drawBlockOverlay(pos: BlockPos, color: Color, depth: Boolean) {
@@ -204,32 +206,23 @@ fun LevelRenderContext.drawBlockOverlay(pos: BlockPos, color: Color, depth: Bool
     val shape = block.getShape(level, pos)
     if (shape.isEmpty) return
 
-    val buffer = if (depth) this.bufferSource().getBuffer(RenderTypes.debugFilledBox())
-                 else this.bufferSource().getBuffer(RenderLayers.QUADS_THROUGH_WALLS)
-
-    val camera = mc.gameRenderer.mainCamera.position()
-
     val matrices = this.poseStack()
-    matrices.pushPose()
-    matrices.translate(
-        pos.x - camera.x,
-        pos.y - camera.y,
-        pos.z - camera.z
-    )
-
-    shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-        PrimitiveRenderer.addChainedFilledBoxVertices(
-            matrices.last(),
-            buffer,
-            AABB(
-                minX * 0.999, minY * 0.999, minZ * 0.999,
-                maxX * 1.001, maxY * 1.001, maxZ * 1.001,
-            ),
-            color.rgb
-        )
+    matrices.poseScopeWithCamera {
+        matrices.translate(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        submitGeometry(if (depth) RenderTypes.debugFilledBox() else RenderLayers.QUADS_THROUGH_WALLS) { pose, buffer ->
+            shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
+                PrimitiveRenderer.addChainedFilledBoxVertices(
+                    pose,
+                    buffer,
+                    AABB(
+                        minX * 0.999, minY * 0.999, minZ * 0.999,
+                        maxX * 1.001, maxY * 1.001, maxZ * 1.001,
+                    ),
+                    color.rgb
+                )
+            }
+        }
     }
-
-    matrices.popPose()
 }
 
 fun LevelRenderContext.drawLineBox(
@@ -238,8 +231,9 @@ fun LevelRenderContext.drawLineBox(
     thickness: Float,
     depth: Boolean
 ) = poseStack().poseScopeWithCamera {
-    val buffer = if (depth) this.bufferSource().getBuffer(RenderTypes.LINES) else this.bufferSource().getBuffer(RenderLayers.LINES_THROUGH_WALLS)
-    PrimitiveRenderer.renderLineBox(this.poseStack().last(), buffer, aabb, color.rgb, thickness)
+    submitGeometry(if (depth) RenderTypes.LINES else RenderLayers.LINES_THROUGH_WALLS) { pose, buffer ->
+        PrimitiveRenderer.renderLineBox(pose, buffer, aabb, color.rgb, thickness)
+    }
 }
 
 fun LevelRenderContext.drawFilled(
@@ -247,17 +241,25 @@ fun LevelRenderContext.drawFilled(
     color: Color,
     depth: Boolean
 ) = poseStack().poseScopeWithCamera {
-    val buffer = if (depth) this.bufferSource().getBuffer(RenderTypes.debugFilledBox()) else this.bufferSource().getBuffer(RenderLayers.QUADS_THROUGH_WALLS)
-    PrimitiveRenderer.addChainedFilledBoxVertices(this.poseStack().last(), buffer, aabb, color.rgb)
+    submitGeometry(if (depth) RenderTypes.debugFilledBox() else RenderLayers.QUADS_THROUGH_WALLS) { pose, buffer ->
+        PrimitiveRenderer.addChainedFilledBoxVertices(pose, buffer, aabb, color.rgb)
+    }
 }
 
-inline fun PoseStack.poseScopeWithCamera(block: (PoseStack) -> Unit) = poseScope {
-    val camera = mc.gameRenderer.mainCamera.position()
+fun LevelRenderContext.submitGeometry(
+    renderType: RenderType,
+    renderer: (PoseStack.Pose, VertexConsumer) -> Unit
+) {
+    submitNodeCollector().submitCustomGeometry(poseStack(), renderType, renderer)
+}
+
+fun PoseStack.poseScopeWithCamera(block: (PoseStack) -> Unit) = poseScope {
+    val camera = mc.gameRenderer.mainCamera().position()
     it.translate(-camera.x, -camera.y, -camera.z)
     block(this)
 }
 
-inline fun PoseStack.poseScope(block: (PoseStack) -> Unit) {
+fun PoseStack.poseScope(block: (PoseStack) -> Unit) {
     this.pushPose()
     block(this)
     this.popPose()

@@ -113,7 +113,7 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
         }
 
         internal fun internalRender(context: GuiGraphicsExtractor, example: Boolean) {
-            if (mc.gui.tabList.visible || (!example && !shouldRender())) return
+            if (mc.gui.hud.tabList.visible || (!example && !shouldRender())) return
 
             val pose = context.pose()
 

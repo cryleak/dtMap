@@ -90,8 +90,6 @@ dependencies {
         "net.hypixel:mod-api:1.0.1"
     ).forEach(includeImplementation)
 
-    compileOnly("maven.modrinth:sodium:mc1.21.11-0.8.6-fabric") { isTransitive = false }
-
     includeImplementation("org.reflections:reflections:0.10.2")
     includeImplementation("org.javassist:javassist:3.29.2-GA")
 

@@ -19,7 +19,6 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket
-import net.minecraft.util.Tuple
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.PlayerSkin
 import kotlin.jvm.optionals.getOrNull
@@ -88,17 +87,17 @@ object Scoreboard {
         var isDead: Boolean = false,
         var deaths: Int = 0
     ) {
-        fun mapRenderPosition(): Tuple<Float, Float> =
+        fun mapRenderPosition(): Pair<Float, Float> =
             if (entity != null) {
                 val x = (entity!!.x + 201.0) / (32.0 / 20.0)
                 val z = (entity!!.z + 201.0) / (32.0 / 20.0)
-                Tuple(x.toFloat(), z.toFloat())
+                Pair(x.toFloat(), z.toFloat())
             } else if (roomSize != null) {
                 val offset = this.mapPos.multiply(32.0 / (((roomSize!! + 4.0) * 2)))
                 val pos = mapCenter!!.add(offset).add(Vec2i(201, 201)).divide(32.0 / 20.0)
-                Tuple(pos.x.toFloat(), pos.z.toFloat())
+                Pair(pos.x.toFloat(), pos.z.toFloat())
             } else {
-                Tuple(0f, 0f)
+                Pair(0f, 0f)
             }
 
         fun mapRenderYaw(): Float =

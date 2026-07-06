@@ -61,7 +61,7 @@ object SoloClear {
 
         val player = mc.player ?: return@HudElement
 
-        val screen = mc.screen as? AbstractContainerScreen<*> ?: return@HudElement
+        val screen = mc.gui.screen() as? AbstractContainerScreen<*> ?: return@HudElement
         if (screen.menu.containerId == lastClickedIn) return@HudElement
 
         if (screen.title.string != "Undersized party!") {
@@ -89,7 +89,7 @@ object SoloClear {
         val title = packet.title.string
         if (title != "Creating instance....") return false
 
-        Minecraft.getInstance().screen = null
+        Minecraft.getInstance().gui.setScreen(null)
         mc.connection!!.send(ServerboundContainerClosePacket(packet.containerId))
         ci.cancel()
         return true

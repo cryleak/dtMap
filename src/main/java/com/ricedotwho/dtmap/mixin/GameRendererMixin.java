@@ -20,7 +20,7 @@ public class GameRendererMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void render(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
-        if (minecraft.screen instanceof final ImGuiHandler.RenderInterface renderInterface) {
+        if (minecraft.gui.screen() instanceof final ImGuiHandler.RenderInterface renderInterface) {
             ImGuiHandler.INSTANCE.start();
             renderInterface.render(ImGui.getIO());
             ImGuiHandler.INSTANCE.end();

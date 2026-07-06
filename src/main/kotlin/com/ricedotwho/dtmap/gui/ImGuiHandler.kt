@@ -1,33 +1,19 @@
 package com.ricedotwho.dtmap.gui
 
-import com.mojang.blaze3d.opengl.GlBackend
-import com.mojang.blaze3d.opengl.GlDevice
-import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.opengl.GlTexture
-import com.mojang.blaze3d.systems.GpuDeviceBackend
-import com.mojang.blaze3d.systems.RenderSystem
 import com.ricedotwho.dtmap.DtMap.mc
 import imgui.*
 import imgui.extension.implot.ImPlot
 import imgui.flag.ImGuiConfigFlags
-import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
-import org.lwjgl.glfw.GLFW.glfwGetCurrentContext
-import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
-import org.lwjgl.opengl.GL30
-import org.lwjgl.opengl.GL30C
-import org.lwjgl.opengl.GL33
-import org.lwjgl.opengl.GL33C
 import java.io.IOException
 import java.io.UncheckedIOException
 
 
 object ImGuiHandler {
     private val imGuiGlfw = ImGuiImplGlfw()
-    private val imGuiGl3 = ImGuiImplGl3()
+    private val renderer = MinecraftImGuiRenderer()
 
     abstract class RenderInterface(name: String) : Screen(Component.literal(name)) {
         abstract fun render(io: ImGuiIO)
@@ -38,7 +24,7 @@ object ImGuiHandler {
             ImGui.getIO().clearEventsQueue()
             applyColors()
             ImGui.getIO().fontGlobalScale = mc.window.guiScale.toFloat() / 2f
-            mc.setScreen(this)
+            mc.gui.setScreen(this)
         }
     }
 
@@ -50,10 +36,10 @@ object ImGuiHandler {
         io.iniFilename = null
 
         // val font = loadFont("assets/Roboto-Regular.ttf", 18f)
-        io.configFlags = ImGuiConfigFlags.DockingEnable or ImGuiConfigFlags.ViewportsEnable
+        io.configFlags = ImGuiConfigFlags.DockingEnable
 
-        imGuiGlfw.init(handle, true)
-        imGuiGl3.init()
+        imGuiGlfw.initForOther(handle, true)
+        renderer.initialize()
     }
 
     fun applyColors() {
@@ -156,33 +142,13 @@ object ImGuiHandler {
     }
 
     fun start() {
-        val framebuffer = Minecraft.getInstance().mainRenderTarget
-        GL33C.glBindFramebuffer(
-            GL33C.GL_FRAMEBUFFER,
-            (framebuffer.getColorTexture() as GlTexture)
-                .getFbo((RenderSystem.getDevice().backend as GlDevice).directStateAccess(), null)
-        )
-        GlStateManager._viewport(0, 0, framebuffer.width, framebuffer.height);
-
-        imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
     }
 
     fun end() {
         ImGui.render()
-
-        imGuiGl3.renderDrawData(ImGui.getDrawData())
-
-        GlStateManager._glBindFramebuffer(GL33.GL_FRAMEBUFFER, 0)
-
-        if (ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) {
-            val ptr = glfwGetCurrentContext()
-            ImGui.updatePlatformWindows()
-            ImGui.renderPlatformWindowsDefault()
-
-            glfwMakeContextCurrent(ptr)
-        }
+        renderer.render(ImGui.getDrawData())
     }
 
     var glyphRanges: ShortArray? = null
@@ -212,7 +178,7 @@ object ImGuiHandler {
     }
 
     fun dispose() {
-        imGuiGl3.shutdown()
+        renderer.shutdown()
         imGuiGlfw.shutdown()
 
         ImPlot.destroyContext()

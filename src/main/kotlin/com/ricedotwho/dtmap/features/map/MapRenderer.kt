@@ -74,7 +74,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
         matrices.popMatrix()
 
         if (!DungeonMessages.inBoss) {
-            val title = mc.screen?.title?.string
+            val title = mc.gui.screen()?.title?.string
             val renderNames = DtMap.keybindShowHud.isDown || Leap.holdingLeap || title == "Spirit Leap" || title == "Teleport to Player"
 
             val renderPlayerHead = fun(player: Scoreboard.DungeonPlayer) {
@@ -82,7 +82,7 @@ object MapRenderer : Hud.Component("Map", 0.1, 0.1, Hud.Type.Dungeon, 1.5f, stat
 
                 val pos = player.mapRenderPosition()
                 matrices.pushMatrix()
-                matrices.translate(pos.a - 2, pos.b - 2)
+                matrices.translate(pos.first - 2, pos.second - 2)
 
                 if (renderNames) {
                     matrices.pushMatrix()
