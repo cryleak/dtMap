@@ -5,15 +5,14 @@ import com.ricedotwho.dtmap.DtMap.mc
 import com.ricedotwho.dtmap.features.map.Scoreboard
 import com.ricedotwho.dtmap.utils.DungeonMessages
 import com.ricedotwho.dtmap.utils.Location
-import imgui.ImGui
-import imgui.ImGuiIO
-import imgui.flag.ImGuiWindowFlags
+import com.ricedotwho.dtmap.utils.render.skija.SkijaRenderer
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.resources.Identifier
+import org.lwjgl.glfw.GLFW
 import java.awt.Color
 import java.nio.file.Path
 import kotlin.io.path.bufferedReader
@@ -24,7 +23,7 @@ import kotlin.math.sign
 
 
 // mostly copied over from BladeMasterGabe's practical-config
-object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
+object Hud : SkijaScreen("DtMapHud") {
     private val components = mutableListOf<Component>()
 
     enum class Condition(val displayName: String, val predicate: () -> Boolean) {
@@ -182,15 +181,21 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
         horizontalAmount: Double,
         verticalAmount: Double
     ): Boolean {
-        if (selected != null) selected!!.scale += sign(verticalAmount).toFloat() * 0.02f
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+        if (selected != null) {
+            selected!!.scale = (selected!!.scale + sign(verticalAmount).toFloat() * 0.02f).coerceIn(0.1f, 8.0f)
+            return true
+        }
+        return false
     }
 
     override fun mouseClicked(click: MouseButtonEvent, doubled: Boolean): Boolean {
         val x = click.x()
         val y = click.y()
 
-        if (clickedInOpenedOptions(x, y)) return super.mouseClicked(click, doubled)
+        if (clickedInOpenedOptions(x, y)) {
+            handleOptionsClick(x, y)
+            return true
+        }
 
         val clicked = components.find {
             val bounds = it.internalBounds()
@@ -205,30 +210,29 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
         selected = clicked
         if (selected == null || selected != openedOptions) openedOptions = null
 
-        if (click.button() == 1) {
+        if (click.button() == GLFW.GLFW_MOUSE_BUTTON_2) {
             openedOptions = if (clicked == openedOptions) null else clicked
-            return super.mouseClicked(click, doubled)
+            return true
         }
 
-        if (selected != null) isDragging = true
+        if (selected != null && click.button() == GLFW.GLFW_MOUSE_BUTTON_1) isDragging = true
 
-        return super.mouseClicked(click, doubled)
+        return selected != null
     }
 
     override fun mouseDragged(click: MouseButtonEvent, offsetX: Double, offsetY: Double): Boolean {
         if (isDragging && selected != null) {
-            checkNotNull(minecraft)
-            val window = minecraft!!.window
+            val window = minecraft.window
             selected!!.x += offsetX / window.guiScaledWidth
             selected!!.y += offsetY / window.guiScaledHeight
         }
 
-        return super.mouseDragged(click, offsetX, offsetY)
+        return isDragging
     }
 
     override fun mouseReleased(click: MouseButtonEvent): Boolean {
         isDragging = false
-        return super.mouseReleased(click)
+        return true
     }
 
     private val Renderer = HudElement { context, _ ->
@@ -263,78 +267,144 @@ object Hud : ImGuiHandler.RenderInterface("DtMapHud") {
         super.onClose()
     }
 
-    private val openedOptionsSize = Pair(500f, 600f)
+    private enum class OptionKind {
+        Condition,
+        DungeonClass
+    }
+
+    private data class OptionRow(
+        val kind: OptionKind,
+        val condition: Condition?,
+        val dungeonClass: Scoreboard.DungeonClass?,
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float
+    ) {
+        fun contains(mouseX: Double, mouseY: Double): Boolean =
+            mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height
+    }
+
+    private val optionRows = mutableListOf<OptionRow>()
+
+    private fun openedOptionsSize(opened: Component): Pair<Float, Float> =
+        Pair(246f, if (opened.type == Type.Dungeon) 318f else 190f)
 
     private fun clickedInOpenedOptions(x: Double, y: Double): Boolean {
         if (openedOptions == null) return false
 
         val (posX, posY) = selectedWindowPosition()
-        val (sizeX, sizeY) = openedOptionsSize
-
-        val scale = minecraft!!.window.guiScale
-        val scaledX = x * scale
-        val scaledY = y * scale
-        return (scaledX >= posX && scaledX <= posX + sizeX && scaledY >= posY && scaledY <= posY + sizeY)
+        val (sizeX, sizeY) = openedOptionsSize(openedOptions!!)
+        return x >= posX && x <= posX + sizeX && y >= posY && y <= posY + sizeY
     }
 
     private fun selectedWindowPosition(): Pair<Float, Float> {
         val opened = openedOptions ?: return Pair(0f, 0f)
 
-        val viewPort = ImGui.getMainViewport()
-        val (boundsX, boundsY) = opened.offsetBounds(viewPort.size.x.toInt(), viewPort.size.y.toInt())
-        val pos = opened.position(viewPort.sizeX.toInt(), viewPort.sizeY.toInt())
-        val (sizeX, sizeY) = openedOptionsSize
+        val screenW = minecraft.window.guiScaledWidth.toFloat()
+        val screenH = minecraft.window.guiScaledHeight.toFloat()
+        val (boundsX, boundsY) = opened.offsetBounds(screenW.toInt(), screenH.toInt())
+        val pos = opened.position(screenW.toInt(), screenH.toInt())
+        val (sizeX, sizeY) = openedOptionsSize(opened)
 
-        val scale = minecraft!!.window.guiScale
-        var x = viewPort.pos.x + pos.first + boundsX.toFloat() * scale - sizeX
-        var y = viewPort.pos.y + pos.second + boundsY.toFloat() * scale
+        var x = pos.first + boundsX.toFloat() - sizeX - 8f
+        var y = pos.second + boundsY.toFloat()
 
-        if (y < viewPort.pos.y) y = viewPort.pos.y
-        if (y + 600f > viewPort.pos.y + viewPort.size.y) y = viewPort.pos.y + viewPort.size.y - sizeY
+        if (y < 6f) y = 6f
+        if (y + sizeY > screenH - 6f) y = screenH - sizeY - 6f
 
-        if (viewPort.pos.x > x) {
+        if (x < 6f) {
             val (boundsSizeX, _) = opened.internalBounds()
-            x += boundsSizeX.toFloat() * scale + sizeX
+            x = pos.first + boundsX.toFloat() + boundsSizeX.toFloat() + 8f
         }
 
-        return Pair(x, y)
+        x = x.coerceIn(6f, (screenW - sizeX - 6f).coerceAtLeast(6f))
+        return Pair(x, y.coerceIn(6f, (screenH - sizeY - 6f).coerceAtLeast(6f)))
     }
 
-    override fun render(io: ImGuiIO) {
+    override fun renderSkija(mouseX: Double, mouseY: Double, deltaTicks: Float) {
         val opened = openedOptions ?: return
 
         val (x, y) = selectedWindowPosition()
-        val (sizeX, sizeY) = openedOptionsSize
-        ImGui.setNextWindowPos(x, y)
-        ImGui.setNextWindowSize(sizeX, sizeY)
+        val (sizeX, sizeY) = openedOptionsSize(opened)
+        optionRows.clear()
 
-        val flags = ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoCollapse
-        if (ImGui.begin("DtMapHud", flags)) {
-            opened.allowedStaticRenderConditions.forEach { condition ->
-                val active = opened.staticRenderConditions.find { it == condition }
-                if (ImGui.checkbox(condition.displayName, active != null)) {
-                    if (active != null) opened.staticRenderConditions.remove(active)
-                    else opened.staticRenderConditions.add(condition)
-                }
-            }
+        SkijaRenderer.dropShadow(x, y, sizeX, sizeY, 10f, 1f, 7f)
+        SkijaRenderer.rect(x, y, sizeX, sizeY, PANEL, 7f)
+        SkijaRenderer.hollowRect(x, y, sizeX, sizeY, 1f, BORDER, 7f)
+        SkijaRenderer.text(opened.identifier, x + 12f, y + 11f, 14f, TEXT)
+        SkijaRenderer.text("Scale ${String.format("%.2f", opened.scale)}", x + 12f, y + 31f, 11f, MUTED)
 
-            if (opened.type == Type.Dungeon) {
-                if (ImGui.beginCombo("##classes", opened.dungeonClasses.joinToString(", ") { it.name })) {
-                    Scoreboard.DungeonClass.entries.subList(0, 5).forEachIndexed { index, klass ->
-                        ImGui.pushID(index)
-                        val active = opened.dungeonClasses.find { it.name == klass.name }
-                        if (ImGui.checkbox(klass.name, active != null)) {
-                            if (active != null) opened.dungeonClasses.remove(active)
-                            else opened.dungeonClasses.add(klass)
-                        }
-                        ImGui.popID()
-                    }
-                    ImGui.endCombo()
-                }
-                ImGui.sameLine()
-                ImGui.labelText("##classeslabel", "Classes")
+        var rowY = y + 55f
+        SkijaRenderer.text("Render conditions", x + 12f, rowY, 11.5f, MUTED)
+        rowY += 18f
+        opened.allowedStaticRenderConditions.forEach { condition ->
+            renderOptionRow(
+                OptionRow(OptionKind.Condition, condition, null, x + 10f, rowY, sizeX - 20f, 24f),
+                opened.staticRenderConditions.any { it == condition },
+                condition.displayName,
+                mouseX,
+                mouseY
+            )
+            rowY += 26f
+        }
+
+        if (opened.type == Type.Dungeon) {
+            rowY += 8f
+            SkijaRenderer.text("Classes", x + 12f, rowY, 11.5f, MUTED)
+            rowY += 18f
+            Scoreboard.DungeonClass.entries.subList(0, 5).forEach { klass ->
+                renderOptionRow(
+                    OptionRow(OptionKind.DungeonClass, null, klass, x + 10f, rowY, sizeX - 20f, 24f),
+                    opened.dungeonClasses.any { it == klass },
+                    klass.name,
+                    mouseX,
+                    mouseY
+                )
+                rowY += 26f
             }
         }
-        ImGui.end()
     }
-}
+
+    private fun renderOptionRow(row: OptionRow, active: Boolean, label: String, mouseX: Double, mouseY: Double) {
+        val hovered = row.contains(mouseX, mouseY)
+        SkijaRenderer.rect(row.x, row.y, row.width, row.height, if (hovered) CONTROL_HOVER else CONTROL, 5f)
+        SkijaRenderer.hollowRect(row.x + 6f, row.y + 5f, 14f, 14f, 1f, if (active) ACCENT else MUTED, 3f)
+        if (active) {
+            SkijaRenderer.rect(row.x + 9f, row.y + 8f, 8f, 8f, ACCENT, 2f)
+        }
+        SkijaRenderer.text(label, row.x + 28f, row.y + 7f, 12f, TEXT)
+        optionRows += row
+    }
+
+    private fun handleOptionsClick(mouseX: Double, mouseY: Double) {
+        val opened = openedOptions ?: return
+        val row = optionRows.firstOrNull { it.contains(mouseX, mouseY) } ?: return
+        when (row.kind) {
+            OptionKind.Condition -> {
+                val condition = row.condition ?: return
+                if (opened.staticRenderConditions.any { it == condition }) {
+                    opened.staticRenderConditions.remove(condition)
+                } else {
+                    opened.staticRenderConditions.add(condition)
+                }
+            }
+            OptionKind.DungeonClass -> {
+                val klass = row.dungeonClass ?: return
+                if (opened.dungeonClasses.any { it == klass }) {
+                    opened.dungeonClasses.remove(klass)
+                } else {
+                    opened.dungeonClasses.add(klass)
+                }
+            }
+        }
+    }
+
+    private const val PANEL = 0xF0171A20.toInt()
+    private const val CONTROL = 0xFF252A32.toInt()
+    private const val CONTROL_HOVER = 0xFF303641.toInt()
+    private const val BORDER = 0xFF3A414D.toInt()
+    private const val TEXT = 0xFFF2F4F7.toInt()
+    private const val MUTED = 0xFF9AA3AF.toInt()
+    private const val ACCENT = 0xFFFFB86B.toInt()
+    }

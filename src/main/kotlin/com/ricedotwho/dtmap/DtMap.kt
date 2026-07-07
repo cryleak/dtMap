@@ -11,7 +11,6 @@ import com.ricedotwho.dtmap.features.SoloClear
 import com.ricedotwho.dtmap.features.map.DungeonMap
 import com.ricedotwho.dtmap.features.map.RoomData
 import com.ricedotwho.dtmap.gui.Hud
-import com.ricedotwho.dtmap.gui.ImGuiHandler
 import com.ricedotwho.dtmap.gui.Settings
 import com.ricedotwho.dtmap.utils.DungeonMessages
 import com.ricedotwho.dtmap.utils.IrisCompatibility
@@ -78,7 +77,6 @@ object DtMap : ClientModInitializer {
             )
         })
 
-        ImGuiHandler
         Location.register()
         DungeonMap.register()
         DungeonMessages.register()

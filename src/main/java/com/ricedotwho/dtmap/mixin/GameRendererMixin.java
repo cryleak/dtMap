@@ -1,7 +1,7 @@
 package com.ricedotwho.dtmap.mixin;
 
-import com.ricedotwho.dtmap.gui.ImGuiHandler;
-import imgui.ImGui;
+import com.ricedotwho.dtmap.gui.SkijaScreen;
+import com.ricedotwho.dtmap.utils.render.skija.SkijaRenderer;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -20,10 +20,20 @@ public class GameRendererMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void render(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
-        if (minecraft.gui.screen() instanceof final ImGuiHandler.RenderInterface renderInterface) {
-            ImGuiHandler.INSTANCE.start();
-            renderInterface.render(ImGui.getIO());
-            ImGuiHandler.INSTANCE.end();
+        if (minecraft.gui.screen() instanceof final SkijaScreen screen) {
+            int width = minecraft.getWindow().getGuiScaledWidth();
+            int height = minecraft.getWindow().getGuiScaledHeight();
+            double mouseX = minecraft.mouseHandler.getScaledXPos(minecraft.getWindow());
+            double mouseY = minecraft.mouseHandler.getScaledYPos(minecraft.getWindow());
+
+            if (SkijaRenderer.beginOverlayFrame(width, height)) {
+                try {
+                    screen.renderSkija(mouseX, mouseY, tickCounter.getGameTimeDeltaPartialTick(true));
+                } finally {
+                    SkijaRenderer.endOverlayFrame();
+                }
+            }
+            SkijaRenderer.compositeOverlay();
         }
     }
 }

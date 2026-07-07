@@ -10,7 +10,6 @@ plugins {
 
 version = project.property("mod_version") as String + "+" + project.property("minecraft_version") as String
 group = project.property("maven_group") as String
-val imgui_version = project.property("imgui_version")
 
 base {
     archivesName.set(project.property("archives_base_name") as String)
@@ -55,6 +54,7 @@ repositories {
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
+    mavenCentral()
     mavenLocal()
 
     maven ( url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" )
@@ -80,18 +80,22 @@ dependencies {
         include(str)
     }
 
-    arrayOf(
-        "io.github.spair:imgui-java-binding:$imgui_version",
-        "io.github.spair:imgui-java-lwjgl3:$imgui_version",
-        "io.github.spair:imgui-java-natives-windows:$imgui_version",
-        "io.github.spair:imgui-java-natives-linux:$imgui_version",
-        "io.github.spair:imgui-java-natives-macos:$imgui_version",
-
-        "net.hypixel:mod-api:1.0.1"
-    ).forEach(includeImplementation)
+    includeImplementation("net.hypixel:mod-api:1.0.1")
 
     includeImplementation("org.reflections:reflections:0.10.2")
     includeImplementation("org.javassist:javassist:3.29.2-GA")
+
+    val skijaVersion = "0.143.17"
+    val humbleTypesVersion = "0.2.0"
+
+    includeImplementation("io.github.humbleui:types:$humbleTypesVersion")
+    includeImplementation("io.github.humbleui:skija-shared:$skijaVersion")
+
+    listOf("windows-x64", "linux-x64", "macos-x64", "macos-arm64").forEach { platform ->
+        val dependency = "io.github.humbleui:skija-$platform:$skijaVersion"
+        runtimeOnly(dependency)
+        include(dependency)
+    }
 
     implementation("com.google.code.gson:gson:2.10.1")
     runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
